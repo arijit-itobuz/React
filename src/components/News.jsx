@@ -1,5 +1,7 @@
 import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 import NewsItem from './NewsItem'
+import Spinner from './Spinner'
 
 export default class News extends Component {
   // articles = [
@@ -17,6 +19,18 @@ export default class News extends Component {
   //     "content": "Last week, we at ESPNcricinfo did something we have been thinking of doing for eight years now: pretend-live ball-by-ball commentary for a classic cricket match. We knew the result, yes, but we tried… [+6823 chars]"
   //   }
   // ]
+
+  static defaultProps = {
+    country: 'in',
+    pageSize: 20,
+    category: 'general'
+  }
+  static propTypes = {
+    country: PropTypes.string,
+    pageSize: PropTypes.number,
+    category: PropTypes.string
+  }
+
   constructor() {
     super()
     // console.log('constructor');
@@ -24,37 +38,48 @@ export default class News extends Component {
       // articles: this.articles,
       articles: [],
       loading: false,
-      page: 1
+      page: 1,
+      totalResults: 0,
+      apiKey: 'e104cd12f0fd47f7a2ac7d932682002a'
     }
   }
-
+ƒ
   async componentDidMount() {
     // console.log('cdm');
-    let url = 'https://newsapi.org/v2/top-headlines?country=in&category=technology&apiKey=f46ca323c38f4c1fbe8b5f46fe3de358&page=1'
+    this.setState({loading: true})
+    let url = `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=${this.state.apiKey}&page=1&pageSize=${this.props.pageSize}`
     let response = await fetch(url)
     let data = await response.json()
-    console.log(data);
-    this.setState({ articles: data.articles })
-  }
-
-  
-  handleNextClick = async () => {
-    let url = `https://newsapi.org/v2/top-headlines?country=in&category=technology&apiKey=f46ca323c38f4c1fbe8b5f46fe3de358&page=${this.state.page + 1}`
-    let response = await fetch(url)
-    let data = await response.json()
-    this.setState({
-      articles: data.articles,
-      page: ++this.state.page
+    // console.log(data);
+    this.setState({ 
+      articles: data.articles, 
+      totalResults: data.totalResults,
+      loading: false
     })
   }
-  
-  handlePreviousClick = async () => {
-    let url = `https://newsapi.org/v2/top-headlines?country=in&category=technology&apiKey=f46ca323c38f4c1fbe8b5f46fe3de358&page=${this.state.page - 1}`
+
+
+  handleNextClick = async () => {
+    this.setState({loading: true})
+    let url = `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=${this.state.apiKey}&page=${this.state.page + 1}&pageSize=${this.props.pageSize}`
     let response = await fetch(url)
     let data = await response.json()
     this.setState({
       articles: data.articles,
-      page: --this.state.page
+      page: ++this.state.page,
+      loading: false
+    })
+  }
+
+  handlePreviousClick = async () => {
+    this.setState({loading: true})
+    let url = `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=${this.state.apiKey}&page=${this.state.page - 1}&pageSize=${this.props.pageSize}`
+    let response = await fetch(url)
+    let data = await response.json()
+    this.setState({
+      articles: data.articles,
+      page: --this.state.page,
+      loading: false
     })
   }
 
@@ -62,20 +87,23 @@ export default class News extends Component {
     // console.log('render');
     return (
       <div className='container my-3 p-3 border border-muted rounded-3'>
-        <div className='d-flex justify-content-between align-items-center'>
-          <h1 className='mb-3 fw-bold text-center text-lg-start'>Top Headlines - Explore</h1>
-          <button type='button' className='btn btn-sm btn-dark ms-auto' onClick={this.handlePreviousClick} disabled={this.state.page < 1}>Previous</button>
-          <button type='button' className='btn btn-sm btn-dark ms-2' onClick={this.handleNextClick}>Next</button>
+        <div className='d-flex flex-column flex-lg-row justify-content-center align-items-center justify-content-lg-between'>
+          <h1 className='mb-3 fw-bold text-lg-start'>Top Headlines - Explore</h1>
+          <div className='d-none d-lg-flex flex-row justify-content-between'>
+            <button type='button' className='btn btn-sm btn-dark ms-2' onClick={this.handlePreviousClick} disabled={this.state.page <=  1}>Previous</button>
+            <button type='button' className='btn btn-sm btn-dark ms-2' onClick={this.handleNextClick} disabled={this.state.page >= Math.ceil(this.state.totalResults/this.props.pageSize)}>Next</button>
+          </div>
         </div>
+       {this.state.loading && <Spinner/>}
         <div className='d-flex justify-content-evenly align-items-start flex-wrap'>
-          {this.state.articles.map((e) => {
-            return <NewsItem key={e.url} title={e.title} description={e.description !== null ? e.description.slice(0, 99) + "....." : ''} imgUrl={e.urlToImage !== null ? e.urlToImage : 'https://telecomtalk.info/wp-content/uploads/2022/07/5g-smartphones-coming-in-july-2022-india.jpg'} newsUrl={e.url} />
+          {!this.state.loading && this.state.articles.map((e) => {
+            return <NewsItem key={e.url} title={e.title} description={e.description !== null ? e.description.slice(0, 99) + "....." : ''} imgUrl={e.urlToImage !== null ? e.urlToImage : 'https://www.rbs.ca/wp-content/themes/rbs/images/news-placeholder.png'} newsUrl={e.url} />
           })}
         </div>
         <hr />
         <div className="container d-flex justify-content-between align-items-center">
-          <button type='button' className='btn btn-sm btn-dark' onClick={this.handlePreviousClick} disabled={this.state.page < 1}>Previous</button>
-          <button type='button' className='btn btn-sm btn-dark' onClick={this.handleNextClick}>Next</button>
+          <button type='button' className='btn btn-sm btn-dark' onClick={this.handlePreviousClick} disabled={this.state.page <= 1}>Previous</button>
+          <button type='button' className='btn btn-sm btn-dark' onClick={this.handleNextClick} disabled={this.state.page >= Math.ceil(this.state.totalResults/this.props.pageSize)}>Next</button>
         </div>
       </div>
     )
