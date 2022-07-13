@@ -23,12 +23,14 @@ export default class News extends Component {
   static defaultProps = {
     country: 'in',
     pageSize: 20,
-    category: 'general'
+    category: 'general',
+    title: 'Explore'
   }
   static propTypes = {
     country: PropTypes.string,
     pageSize: PropTypes.number,
-    category: PropTypes.string
+    category: PropTypes.string,
+    key: PropTypes.string
   }
 
   constructor() {
@@ -88,7 +90,7 @@ export default class News extends Component {
     return (
       <div className='container my-3 p-3 border border-muted rounded-3'>
         <div className='d-flex flex-column flex-lg-row justify-content-center align-items-center justify-content-lg-between'>
-          <h1 className='mb-3 fw-bold text-lg-start'>Top Headlines - Explore</h1>
+          <h1 className='mb-3 fw-bold text-lg-start'>{`Top Headlines - ${this.props.title}`}</h1>
           <div className='d-none d-lg-flex flex-row justify-content-between'>
             <button type='button' className='btn btn-sm btn-dark ms-2' onClick={this.handlePreviousClick} disabled={this.state.page <=  1}>Previous</button>
             <button type='button' className='btn btn-sm btn-dark ms-2' onClick={this.handleNextClick} disabled={this.state.page >= Math.ceil(this.state.totalResults/this.props.pageSize)}>Next</button>
